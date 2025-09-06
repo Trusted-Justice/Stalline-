@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stalline</title>
+  <link rel="icon" type="image/png" href="stalline.png" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background-color: chocolate;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: aqua;
+      border-top-left-radius: 40px;
+      border-top-right-radius: 40px;
+      width: 400px;
+      height: 100px;
+      margin: 50px auto 0;
+      gap: 10px;
+    }
+    .container img {
+      width: 50px;
+      height: auto;
+      margin-top: 5px;
+    }
+    .container h1 {
+      font-size: 32px;
+      margin: 0;
+    }
+    .nav1 {
+      background-color: blue;
+      width: 400px;
+      margin: 10px auto;
+      text-align: center;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      border-radius: 10px;
+    }
+    button {
+      border-radius: 50px;
+      height: 30px;
+      background-color: darkslategrey;
+      color: white;
+      padding: 0 15px;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: teal;
+    }
+    .nav2 {
+      background-color: gold;
+      width: 400px;
+      height: 170px;
+      margin: 10px auto;
+      border-bottom-left-radius: 40px;
+      border-bottom-right-radius: 40px;
+      text-align: center;
+      padding-top: 20px;
+    }
+    #inp {
+      width: 250px;
+      height: 35px;
+      border-radius: 35px;
+      padding: 0 15px;
+      border: none;
+      margin-bottom: 10px;
+    }
+    #mic {
+      margin-left: 10px;
+      cursor: pointer;
+      font-size: 20px;
+      background: none;
+      border: none;
+      color: darkred;
+    }
+    .main-content {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 20px;
+      margin: 20px auto;
+      max-width: 900px;
+      flex-wrap: wrap;
+    }
+    #results {
+      flex: 2;
+      background-color: white;
+      padding: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      border-radius: 10px;
+      min-width: 300px;
+    }
+    #history {
+      flex: 1;
+      background-color: #fff8dc;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      min-width: 200px;
+    }
+    @media screen and (max-width: 600px) {
+      .container, .nav1, .nav2 {
+        width: 90%;
+      }
+      #inp {
+        width: 80%;
+      }
+      .main-content {
+        flex-direction: column;
+        align-items: center;
+      }
+      #results, #history {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src=images/stalline.png alt="Stalline Logo" />
+    <h1><i><b>Stalline</b></i></h1>
+  </div>
+
+  <div class="nav1" id="subject-bar"></div>
+
+  <div class="nav2">
+    <input type="text" id="inp" placeholder="Ask a question" />
+    <button id="mic" title="Speak your question">🎤</button>
+    <br />
+    <button id="search">Search</button>
+  </div>
+
+  <div class="main-content">
+    <div id="history"><b>Search History:</b><ul id="history-list"></ul></div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const subjects = [
+      "Mathematics", "English", "Biology", "Chemistry", "Physics", "Geography", "History", "Civic Education", "Economics", "Literature", "Agricultural Science", "Computer Science", "Technical Drawing", "Commerce", "Government",
+      "Engineering", "Medicine", "Law", "Business Administration", "Accounting", "Political Science", "Mass Communication", "Sociology", "Psychology", "Philosophy", "Architecture", "Computer Engineering", "Microbiology", "Biochemistry", "Nursing", "Public Health"
+    ];
+
+    const subjectBar = document.getElementById("subject-bar");
+    let selectedSubject = "";
+
+    subjects.forEach(subject => {
+      const btn = document.createElement("button");
+      btn.textContent = subject;
+      btn.onclick = () => {
+        selectedSubject = subject;
+        document.querySelectorAll(".nav1 button").forEach(b => b.style.backgroundColor = "darkslategrey");
+        btn.style.backgroundColor = "darkorange";
+      };
+      subjectBar.appendChild(btn);
+    });
+
+    const updateHistory = (subject, question) => {
+      const historyList = document.getElementById("history-list");
+      const item = document.createElement("li");
+      item.textContent = `${subject}: ${question}`;
+      historyList.prepend(item);
+    };
+
+    document.getElementById("search").onclick = async () => {
+      const query = document.getElementById("inp").value;
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "";
+
+      if (!selectedSubject || !query) {
+        alert("Please select a subject and enter a question.");
+        return;
+      }
+
+      const fullQuery = `${selectedSubject} ${query}`;
+      const apiKey = "AIzaSyD1zjfdv9jYZ1odQRQVTvnymn3vok-eg0I"; // Replace with your actual API key
+      const cx = "46069cef752d14e06"; // Replace with your actual Search Engine ID
+
+      resultsDiv.innerHTML = "<p>Searching...</p>";
+      updateHistory(selectedSubject, query);
+
+      try {
+        const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(fullQuery)}`);
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+          const summary = data.items[0].snippet;
+          resultsDiv.innerHTML = data.items.slice(0, 3).map(item => `
+            <div style="margin-bottom: 15px;">
+              <h3>${item.title}</h3>
+              <p>${item.snippet}</p>
+              <a href="${item.link}" target="_blank">Read more</a>
+            </div>
+          `).join('') + `<hr><p><b>Summary:</b> ${summary}</p>`;
+        } else {
+          resultsDiv.innerHTML = "<p>No results found.</p>";
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        resultsDiv.innerHTML = "<p>Something went wrong. Try again Later.</p>";
+      }
+    };
+
+    // 🎤 Voice Input
+    const micBtn = document.getElementById("mic");
+    const inputField = document.getElementById("inp");
+
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      micBtn.onclick = () => {
+        recognition.start();
+        micBtn.textContent = "🎙️";
+      };
+
+      recognition.onresult = (event) => {
+        inputField.value = event.results[0][0].transcript;
+        micBtn.textContent = "🎤";
+      };
+
+      recognition.onerror = () => {
+        micBtn.textContent = "🎤";
+        alert("Voice recognition failed. Try again.");
+      };
+    } else {
+      micBtn.style.display = "none";
+    }
+  </script>
+</body>
+</html>
